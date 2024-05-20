@@ -11,6 +11,17 @@ st.set_page_config(
     initial_sidebar_state = 'auto'
 )
 
+# for model loading
+st.set_option('deprecation.showfileUploaderEncoding', False)
+
+@st.cache_resource
+def load_model():
+    model = tf.keras.models.load_model('Chess_model.h5')
+    return model
+
+with st.spinner('Model is being loaded..'):
+    model = load_model()
+
 
 # Main body 
 
@@ -37,7 +48,7 @@ st.markdown(page_bg_img, unsafe_allow_html=True)
 
 
 #header name (center)
-st.write("# Chess Piece Identification")
+st.write("# Chess Piece Classification")
 
 #for predicting the model 
 file = st.file_uploader("", type=["jpg", "png"])
@@ -45,8 +56,10 @@ data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
 
 
 def import_and_predict(image_data, model):
+   
     size = (224, 224)
-    image = ImageOps.fit(image_data, size, Image.Resampling.LANCZOS)
+    image = image_data.convert("RGB")
+    image = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
     image_array = np.asarray(image)
     normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
     data[0] = normalized_image_array
@@ -110,9 +123,9 @@ else:
     string = "Detected Piece: " + class_names[np.argmax(predictions)]
     st.sidebar.info(string)
     
-    index = np.argmax(predictions)
-    x = predictions[0][index]
-    st.sidebar.error("Confidence : " + str(round(x*100,2)) + " %")
+    #index = np.argmax(predictions)
+    #x = predictions[0][index]
+    #st.sidebar.error("Confidence : " + str(round(x*100,2)) + " %")
     
     detected_piece = class_names[np.argmax(predictions)]
     
@@ -127,5 +140,3 @@ else:
     
     else:
         st.sidebar.video(video_urls[detected_piece], loop=True, autoplay=True, muted=False)
-
-
